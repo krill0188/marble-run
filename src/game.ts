@@ -234,9 +234,12 @@ export class Game {
       // 물리 시뮬레이션
       const { collisions, wallHits } = physicsStep(this.marbles, this.map, dt, this.gameTime);
 
-      // 사운드
+      // 사운드 + 화면 흔들림
       if (this.config.soundEnabled) {
-        if (collisions.length > 0) playBounce(0.3 + Math.random() * 0.4);
+        if (collisions.length > 0) {
+          playBounce(0.3 + Math.random() * 0.4);
+          if (collisions.length >= 3) this.renderer.triggerShake(2);
+        }
         if (wallHits.length > 0 && Math.random() < 0.3) playWallHit();
       }
 
@@ -274,6 +277,9 @@ export class Game {
     // Confetti 업데이트
     updateConfetti(dt);
 
+    // 카메라 업데이트
+    this.renderer.updateCamera(this.marbles, this.map, this.state);
+
     // 렌더
     this.renderer.render(
       this.marbles,
@@ -300,6 +306,7 @@ export class Game {
 
     updateConfetti(dt);
 
+    this.renderer.updateCamera(this.marbles, this.map, this.state);
     this.renderer.render(
       this.marbles,
       this.map,
@@ -365,7 +372,8 @@ export class Game {
 
     this.onStateChange?.('idle');
 
-    // 정지 상태 렌더
+    // 카메라 리셋 + 정지 상태 렌더
+    this.renderer.updateCamera(this.marbles, this.map, 'idle');
     this.renderer.render(
       this.marbles,
       this.map,

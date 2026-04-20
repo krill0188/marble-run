@@ -205,10 +205,13 @@ export class Renderer {
       case 'circle':
       case 'bumper': {
         const r = obs.size.x;
-        // 글로우 효과
-        if (obs.type === 'bumper') {
+        const isBumper = obs.type === 'bumper';
+        const isSmallPeg = r <= 6;
+
+        // 글로우 효과 (범퍼만)
+        if (isBumper) {
           const glow = ctx.createRadialGradient(0, 0, r, 0, 0, r * 3);
-          glow.addColorStop(0, obs.color + '40');
+          glow.addColorStop(0, obs.color + '50');
           glow.addColorStop(1, 'transparent');
           ctx.fillStyle = glow;
           ctx.beginPath();
@@ -216,21 +219,42 @@ export class Renderer {
           ctx.fill();
         }
 
-        // 본체
-        const grad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0, 0, 0, r);
-        grad.addColorStop(0, this.lightenColor(obs.color, 40));
-        grad.addColorStop(0.7, obs.color);
-        grad.addColorStop(1, this.lightenColor(obs.color, -30));
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(0, 0, r, 0, Math.PI * 2);
-        ctx.fill();
+        if (isSmallPeg) {
+          // 작은 핀: 심플하고 빠른 렌더
+          ctx.fillStyle = obs.color;
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fill();
 
-        // 하이라이트
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.beginPath();
-        ctx.arc(-r * 0.25, -r * 0.25, r * 0.35, 0, Math.PI * 2);
-        ctx.fill();
+          // 미니 하이라이트
+          ctx.fillStyle = 'rgba(255,255,255,0.35)';
+          ctx.beginPath();
+          ctx.arc(-r * 0.2, -r * 0.2, r * 0.4, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // 큰 핀/범퍼: 풀 렌더
+          const grad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0, 0, 0, r);
+          grad.addColorStop(0, this.lightenColor(obs.color, 50));
+          grad.addColorStop(0.5, obs.color);
+          grad.addColorStop(1, this.lightenColor(obs.color, -40));
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 테두리
+          if (isBumper) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+
+          // 하이라이트
+          ctx.fillStyle = 'rgba(255,255,255,0.4)';
+          ctx.beginPath();
+          ctx.arc(-r * 0.25, -r * 0.25, r * 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
         break;
       }
 

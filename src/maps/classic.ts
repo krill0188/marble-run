@@ -1,5 +1,6 @@
 // ===== 클래식 맵 - 파친코/갈톤보드 (롱 코스) =====
 import { MapData, Obstacle } from '../types';
+import { createFinishWalls, createFinishObstacles } from './finish';
 
 const PEG = '#3a3f4a';
 const BMP = '#4a4f5a';
@@ -86,7 +87,10 @@ const obstacles: Obstacle[] = [
   { type: 'bumper', pos: { x: 200, y: 1280 }, size: { x: 12, y: 12 }, rotation: 0, restitution: 1.5, color: BMP },
   { type: 'bumper', pos: { x: 300, y: 1300 }, size: { x: 16, y: 16 }, rotation: 0, restitution: 1.6, color: BMP },
   { type: 'bumper', pos: { x: 400, y: 1280 }, size: { x: 12, y: 12 }, rotation: 0, restitution: 1.5, color: BMP },
-  ...pegs(120, 1330, 8, 2, 50, 18, 4),
+  ...pegs(120, 1310, 8, 2, 50, 18, 4),
+
+  // 피니시 슬롯 장애물
+  ...createFinishObstacles(600, 1370),
 ];
 
 export const classicMap: MapData = {
@@ -119,6 +123,8 @@ export const classicMap: MapData = {
     { x1: 565, y1: 1105, x2: 490, y2: 1118, restitution: 0.5 },
     { x1: 35, y1: 1235, x2: 130, y2: 1248, restitution: 0.5 },
     { x1: 565, y1: 1235, x2: 470, y2: 1248, restitution: 0.5 },
+    // 피니시 슬롯
+    ...createFinishWalls(600, 1370, 35, 565),
   ],
   obstacles,
 };

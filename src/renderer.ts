@@ -470,30 +470,36 @@ export class Renderer {
   private drawFinishLine(map: MapData): void {
     const ctx = this.ctx;
     const y = map.finishLine;
+    const cx = map.width / 2;
+    const slotW = 20;
 
-    // 통과형 라인 — 점선 + 글로우
     ctx.save();
 
-    // 글로우
+    // 피니시 라인 (슬롯 안에 가로선)
     ctx.shadowColor = '#FECA57';
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 12;
 
-    // 체커 스트라이프 (한 줄만)
-    const stripeH = 6;
-    const stripeW = 12;
-    for (let x = 35; x < map.width - 35; x += stripeW) {
+    // 체커 스트라이프 — 슬롯 폭만큼만
+    const stripeH = 4;
+    const stripeW = 8;
+    for (let x = cx - slotW; x < cx + slotW; x += stripeW) {
       const idx = Math.floor(x / stripeW);
-      ctx.fillStyle = idx % 2 === 0 ? 'rgba(254,202,87,0.9)' : 'rgba(0,0,0,0.6)';
+      ctx.fillStyle = idx % 2 === 0 ? 'rgba(254,202,87,0.9)' : 'rgba(0,0,0,0.7)';
       ctx.fillRect(x, y - stripeH / 2, stripeW, stripeH);
     }
 
     ctx.shadowBlur = 0;
 
-    // FINISH 텍스트 (라인 위)
-    ctx.font = "bold 12px 'Noto Sans KR', sans-serif";
-    ctx.fillStyle = 'rgba(254,202,87,0.7)';
+    // FINISH 텍스트
+    ctx.font = "bold 10px 'Noto Sans KR', sans-serif";
+    ctx.fillStyle = 'rgba(254,202,87,0.6)';
     ctx.textAlign = 'center';
-    ctx.fillText('FINISH', map.width / 2, y - 10);
+    ctx.fillText('FINISH', cx, y - 8);
+
+    // 슬롯 영역 표시 (미세한 하이라이트)
+    ctx.strokeStyle = 'rgba(254,202,87,0.15)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(cx - slotW, y - 40, slotW * 2, 70);
 
     ctx.restore();
   }

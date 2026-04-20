@@ -1,5 +1,6 @@
 // ===== 지그재그 맵 (롱 코스 — 10층) =====
 import { MapData, Obstacle } from '../types';
+import { createFinishWalls, createFinishObstacles } from './finish';
 
 const PEG = '#3a3f4a'; const BMP = '#4a4f5a'; const SPN = '#505868'; const BLK = '#454d5e';
 
@@ -87,6 +88,10 @@ allObs.push({ type: 'bumper', pos: { x: 300, y: chaosY + 50 }, size: { x: 14, y:
 allObs.push({ type: 'bumper', pos: { x: 420, y: chaosY + 30 }, size: { x: 12, y: 12 }, rotation: 0, restitution: 1.5, color: BMP });
 allObs.push({ type: 'spinner', pos: { x: 230, y: chaosY + 80 }, size: { x: 45, y: 5 }, rotation: 0, restitution: 0.5, color: SPN, spinSpeed: 4, currentAngle: 0 });
 allObs.push({ type: 'spinner', pos: { x: 370, y: chaosY + 80 }, size: { x: 45, y: 5 }, rotation: 0, restitution: 0.5, color: SPN, spinSpeed: -4, currentAngle: 0 });
+
+// 피니시 슬롯
+allObs.push(...createFinishObstacles(600, 1370));
+walls.push(...createFinishWalls(600, 1370, 35, 565));
 
 export const zigzagMap: MapData = {
   name: 'zigzag',

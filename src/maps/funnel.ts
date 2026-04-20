@@ -1,5 +1,6 @@
 // ===== 깔때기 맵 (롱 코스) =====
 import { MapData, Obstacle } from '../types';
+import { createFinishWalls, createFinishObstacles } from './finish';
 
 const PEG = '#3a3f4a'; const BMP = '#4a4f5a'; const SPN = '#505868'; const BLK = '#454d5e';
 
@@ -82,7 +83,8 @@ const obstacles: Obstacle[] = [
   { type: 'bumper', pos: { x: 300, y: 1240 }, size: { x: 15, y: 15 }, rotation: 0, restitution: 1.6, color: BMP },
   { type: 'bumper', pos: { x: 400, y: 1210 }, size: { x: 12, y: 12 }, rotation: 0, restitution: 1.5, color: BMP },
   { type: 'spinner', pos: { x: 300, y: 1280 }, size: { x: 55, y: 6 }, rotation: 0, restitution: 0.6, color: SPN, spinSpeed: 4, currentAngle: 0 },
-  ...pegs(230, 1310, 3, 2, 50, 18, 4),
+  ...pegs(230, 1300, 3, 2, 50, 18, 4),
+  ...createFinishObstacles(600, 1370),
 ];
 
 export const funnelMap: MapData = {
@@ -118,6 +120,8 @@ export const funnelMap: MapData = {
     // 최종 깔때기
     { x1: 35, y1: 1170, x2: 210, y2: 1350, restitution: 0.4 },
     { x1: 565, y1: 1170, x2: 390, y2: 1350, restitution: 0.4 },
+    // 피니시 슬롯
+    ...createFinishWalls(600, 1370, 35, 565),
   ],
   obstacles,
 };

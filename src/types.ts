@@ -24,6 +24,9 @@ export interface Marble {
   skillType: SkillType | null;
   skillTimer: number;
   opacity: number;
+  // anti-stuck
+  lastY: number;
+  stuckTimer: number;
 }
 
 export type SkillType = 'boost' | 'shield' | 'shrink' | 'ghost' | 'magnet';

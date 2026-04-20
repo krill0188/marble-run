@@ -151,6 +151,8 @@ export class Game {
         skillType: null,
         skillTimer: 0,
         opacity: 1,
+        lastY: y,
+        stuckTimer: 0,
       });
     }
   }
@@ -191,6 +193,8 @@ export class Game {
       m.skillType = null;
       m.opacity = 1;
       m.radius = 8;
+      m.lastY = m.pos.y;
+      m.stuckTimer = 0;
     }
 
     this.onStateChange?.('ready');

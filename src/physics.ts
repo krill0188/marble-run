@@ -61,8 +61,8 @@ export function resolveMarbleCollision(a: Marble, b: Marble): boolean {
     const normal = vec2Normalize(diff);
     const overlap = minDist - dist;
 
-    // 위치 보정 (절반씩)
-    const correction = vec2Scale(normal, overlap * 0.5);
+    // 위치 보정 (절반씩) — 완전 분리 + 여유 1px
+    const correction = vec2Scale(normal, overlap * 0.55);
     a.pos = vec2Sub(a.pos, correction);
     b.pos = vec2Add(b.pos, correction);
 
@@ -321,6 +321,37 @@ export function physicsStep(
       // 장애물 충돌
       for (const obs of map.obstacles) {
         resolveObstacleCollision(marble, obs, subDt);
+      }
+
+      // === Anti-stuck 시스템 ===
+      // 1초마다 Y 위치 체크 — 거의 안 움직였으면 탈출 힘 부여
+      if (step === 0) {
+        const dy = marble.pos.y - marble.lastY;
+        if (Math.abs(dy) < 3) {
+          marble.stuckTimer += dt;
+        } else {
+          marble.stuckTimer = 0;
+        }
+
+        // 0.8초 이상 멈춰있으면 랜덤 탈출 힘
+        if (marble.stuckTimer > 0.8) {
+          marble.vel.x += (Math.random() - 0.5) * 200;
+          marble.vel.y += 50 + Math.random() * 100;
+          marble.stuckTimer = 0;
+        }
+
+        // 0.5초마다 lastY 갱신
+        marble.lastY = marble.pos.y;
+      }
+
+      // 맵 경계 강제 보정 (벽 밖으로 나간 경우)
+      if (marble.pos.x < 35 + marble.radius) {
+        marble.pos.x = 35 + marble.radius + 1;
+        marble.vel.x = Math.abs(marble.vel.x) * 0.5 + 20;
+      }
+      if (marble.pos.x > map.width - 35 - marble.radius) {
+        marble.pos.x = map.width - 35 - marble.radius - 1;
+        marble.vel.x = -Math.abs(marble.vel.x) * 0.5 - 20;
       }
 
       // 골라인 체크

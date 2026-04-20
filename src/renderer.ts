@@ -4,7 +4,7 @@ import { drawConfetti } from './confetti';
 
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
 
-export type CameraMode = 'full' | 'leader' | 'pack' | 'finish';
+export type CameraMode = 'full' | 'leader' | 'pack' | 'finish' | 'manual';
 
 export class Renderer {
   private canvas: HTMLCanvasElement;
@@ -14,18 +14,34 @@ export class Renderer {
   private showTrails: boolean = true;
 
   // === 카메라 시스템 ===
-  private camX: number = 0;       // 현재 카메라 중심 X (맵 좌표)
-  private camY: number = 0;       // 현재 카메라 중심 Y (맵 좌표)
-  private camZoom: number = 1;    // 현재 줌 (1 = 전체 맵 맞춤)
+  private camX: number = 0;
+  private camY: number = 0;
+  private camZoom: number = 1;
   private targetCamX: number = 0;
   private targetCamY: number = 0;
   private targetZoom: number = 1;
   private camMode: CameraMode = 'full';
-  private camSmooth: number = 0.04; // 카메라 이동 부드러움 (낮을수록 느리게)
+  private camSmooth: number = 0.04;
   private zoomSmooth: number = 0.03;
   private shakeX: number = 0;
   private shakeY: number = 0;
   private shakeIntensity: number = 0;
+
+  // === 수동 카메라 컨트롤 ===
+  private manualMode: boolean = false;
+  private manualCamX: number = 300;
+  private manualCamY: number = 700;
+  private manualZoom: number = 1.5;
+  private isDragging: boolean = false;
+  private dragStartX: number = 0;
+  private dragStartY: number = 0;
+  private dragCamStartX: number = 0;
+  private dragCamStartY: number = 0;
+  private pinchStartDist: number = 0;
+  private pinchStartZoom: number = 1;
+  private autoReturnTimer: number = 0; // 수동 조작 후 자동 복귀 타이머
+  private mapWidth: number = 600;
+  private mapHeight: number = 1400;
 
   // 리더보드용
   private leaderName: string = '';
@@ -36,6 +52,117 @@ export class Renderer {
     this.ctx = canvas.getContext('2d')!;
     this.resize();
     window.addEventListener('resize', () => this.resize());
+    this.setupInputListeners();
+  }
+
+  private setupInputListeners(): void {
+    const c = this.canvas;
+
+    // 마우스 드래그
+    c.addEventListener('mousedown', (e) => {
+      this.isDragging = true;
+      this.dragStartX = e.clientX;
+      this.dragStartY = e.clientY;
+      this.dragCamStartX = this.manualMode ? this.manualCamX : this.camX;
+      this.dragCamStartY = this.manualMode ? this.manualCamY : this.camY;
+      this.enterManualMode();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!this.isDragging) return;
+      const baseScale = Math.min(this.containerW / this.mapWidth, this.containerH / this.mapHeight);
+      const totalScale = baseScale * this.manualZoom;
+      const dx = (e.clientX - this.dragStartX) / totalScale;
+      const dy = (e.clientY - this.dragStartY) / totalScale;
+      this.manualCamX = this.dragCamStartX - dx;
+      this.manualCamY = this.dragCamStartY - dy;
+      this.clampManualCam();
+    });
+
+    window.addEventListener('mouseup', () => {
+      this.isDragging = false;
+    });
+
+    // 마우스 휠 줌
+    c.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      this.enterManualMode();
+      const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
+      this.manualZoom = Math.max(0.8, Math.min(4, this.manualZoom * zoomDelta));
+    }, { passive: false });
+
+    // 터치 드래그 + 핀치 줌
+    c.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        this.isDragging = true;
+        this.dragStartX = e.touches[0].clientX;
+        this.dragStartY = e.touches[0].clientY;
+        this.dragCamStartX = this.manualMode ? this.manualCamX : this.camX;
+        this.dragCamStartY = this.manualMode ? this.manualCamY : this.camY;
+        this.enterManualMode();
+      } else if (e.touches.length === 2) {
+        // 핀치 줌 시작
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        this.pinchStartDist = Math.sqrt(dx * dx + dy * dy);
+        this.pinchStartZoom = this.manualZoom;
+        this.isDragging = false;
+      }
+    }, { passive: true });
+
+    c.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1 && this.isDragging) {
+        const baseScale = Math.min(this.containerW / this.mapWidth, this.containerH / this.mapHeight);
+        const totalScale = baseScale * this.manualZoom;
+        const dx = (e.touches[0].clientX - this.dragStartX) / totalScale;
+        const dy = (e.touches[0].clientY - this.dragStartY) / totalScale;
+        this.manualCamX = this.dragCamStartX - dx;
+        this.manualCamY = this.dragCamStartY - dy;
+        this.clampManualCam();
+      } else if (e.touches.length === 2) {
+        // 핀치 줌
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (this.pinchStartDist > 0) {
+          this.enterManualMode();
+          this.manualZoom = Math.max(0.8, Math.min(4, this.pinchStartZoom * (dist / this.pinchStartDist)));
+        }
+      }
+    }, { passive: true });
+
+    c.addEventListener('touchend', () => {
+      this.isDragging = false;
+      this.pinchStartDist = 0;
+    });
+
+    // 더블클릭/더블탭 → 자동 카메라 복귀
+    c.addEventListener('dblclick', () => {
+      this.exitManualMode();
+    });
+  }
+
+  private enterManualMode(): void {
+    if (!this.manualMode) {
+      this.manualCamX = this.camX;
+      this.manualCamY = this.camY;
+      this.manualZoom = this.camZoom;
+    }
+    this.manualMode = true;
+    this.autoReturnTimer = 0;
+  }
+
+  private exitManualMode(): void {
+    this.manualMode = false;
+  }
+
+  private clampManualCam(): void {
+    this.manualCamX = Math.max(0, Math.min(this.mapWidth, this.manualCamX));
+    this.manualCamY = Math.max(0, Math.min(this.mapHeight, this.manualCamY));
+  }
+
+  isManualMode(): boolean {
+    return this.manualMode;
   }
 
   resize(): void {
@@ -59,6 +186,26 @@ export class Renderer {
 
   // === 카메라 업데이트 (매 프레임) ===
   updateCamera(marbles: Marble[], map: MapData, state: GameState): void {
+    this.mapWidth = map.width;
+    this.mapHeight = map.height;
+
+    // 수동 모드 — 자동 카메라 대신 수동 값 사용
+    if (this.manualMode) {
+      this.camMode = 'manual';
+      this.camX += (this.manualCamX - this.camX) * 0.15;
+      this.camY += (this.manualCamY - this.camY) * 0.15;
+      this.camZoom += (this.manualZoom - this.camZoom) * 0.1;
+
+      // 5초 후 자동 복귀 (게임 진행 중일 때만)
+      if (state === 'running') {
+        this.autoReturnTimer += 1 / 60;
+        if (this.autoReturnTimer > 5) {
+          this.exitManualMode();
+        }
+      }
+      return;
+    }
+
     const active = marbles.filter(m => !m.finished);
     const finished = marbles.filter(m => m.finished);
 
@@ -600,6 +747,7 @@ export class Renderer {
       leader: '🥇 선두 추적',
       pack: '🎯 밀집 추적',
       finish: '🏁 골라인',
+      manual: '👆 수동 (더블클릭=자동)',
     };
     const label = labels[this.camMode];
 

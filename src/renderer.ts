@@ -318,10 +318,14 @@ export class Renderer {
         }
 
         if (isSmallPeg) {
-          ctx.fillStyle = obs.color;
+          // 어두운 메탈 핀 — 눈에 안 띄게
+          const pg = ctx.createRadialGradient(-r * 0.2, -r * 0.2, 0, 0, 0, r);
+          pg.addColorStop(0, this.lightenColor(obs.color, 15));
+          pg.addColorStop(1, obs.color);
+          ctx.fillStyle = pg;
           ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = 'rgba(255,255,255,0.35)';
-          ctx.beginPath(); ctx.arc(-r * 0.2, -r * 0.2, r * 0.4, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.15)';
+          ctx.beginPath(); ctx.arc(-r * 0.2, -r * 0.2, r * 0.3, 0, Math.PI * 2); ctx.fill();
         } else {
           const grad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0, 0, 0, r);
           grad.addColorStop(0, this.lightenColor(obs.color, 50));

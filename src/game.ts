@@ -137,7 +137,7 @@ export class Game {
         name: entries[i].name,
         pos: vec2(x, y),
         vel: vec2(0, 0),
-        radius: 8,
+        radius: 6,
         color: col.bg,
         textColor: col.text,
         weight: entries[i].weight,

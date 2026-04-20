@@ -382,7 +382,7 @@ export function updateSkills(marbles: Marble[], dt: number): void {
       if (marble.skillTimer <= 0) {
         marble.skillActive = false;
         marble.skillType = null;
-        if (marble.radius !== 8) marble.radius = 8;
+        if (marble.radius !== 6) marble.radius = 6;
         marble.opacity = 1;
       }
     }
@@ -398,7 +398,7 @@ export function assignRandomSkill(marble: Marble): void {
 
   switch (marble.skillType) {
     case 'shrink':
-      marble.radius = 5;
+      marble.radius = 4;
       break;
     case 'ghost':
       marble.opacity = 0.4;

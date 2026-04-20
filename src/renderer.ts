@@ -470,17 +470,32 @@ export class Renderer {
   private drawFinishLine(map: MapData): void {
     const ctx = this.ctx;
     const y = map.finishLine;
-    const checkerSize = 10;
-    for (let x = 30; x < map.width - 30; x += checkerSize) {
-      const row = Math.floor(x / checkerSize);
-      for (let r = 0; r < 2; r++) {
-        ctx.fillStyle = (row + r) % 2 === 0 ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)';
-        ctx.fillRect(x, y - checkerSize * 2 + r * checkerSize, checkerSize, checkerSize);
-      }
+
+    // 통과형 라인 — 점선 + 글로우
+    ctx.save();
+
+    // 글로우
+    ctx.shadowColor = '#FECA57';
+    ctx.shadowBlur = 15;
+
+    // 체커 스트라이프 (한 줄만)
+    const stripeH = 6;
+    const stripeW = 12;
+    for (let x = 35; x < map.width - 35; x += stripeW) {
+      const idx = Math.floor(x / stripeW);
+      ctx.fillStyle = idx % 2 === 0 ? 'rgba(254,202,87,0.9)' : 'rgba(0,0,0,0.6)';
+      ctx.fillRect(x, y - stripeH / 2, stripeW, stripeH);
     }
-    ctx.font = "bold 16px 'Noto Sans KR', sans-serif";
-    ctx.fillStyle = '#FECA57'; ctx.textAlign = 'center';
-    ctx.fillText('FINISH', map.width / 2, y + 18);
+
+    ctx.shadowBlur = 0;
+
+    // FINISH 텍스트 (라인 위)
+    ctx.font = "bold 12px 'Noto Sans KR', sans-serif";
+    ctx.fillStyle = 'rgba(254,202,87,0.7)';
+    ctx.textAlign = 'center';
+    ctx.fillText('FINISH', map.width / 2, y - 10);
+
+    ctx.restore();
   }
 
   // === HUD 요소들 (화면 고정) ===

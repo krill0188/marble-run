@@ -407,7 +407,7 @@ export class Renderer {
 
     // 이름
     ctx.globalAlpha = marble.finished ? 0.5 : 1;
-    const fontSize = Math.max(9, r * 0.8);
+    const fontSize = Math.max(8, r * 0.9);
     ctx.font = `bold ${fontSize}px 'Noto Sans KR', sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

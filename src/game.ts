@@ -137,7 +137,7 @@ export class Game {
         name: entries[i].name,
         pos: vec2(x, y),
         vel: vec2(0, 0),
-        radius: 12,
+        radius: 8,
         color: col.bg,
         textColor: col.text,
         weight: entries[i].weight,
@@ -190,7 +190,7 @@ export class Game {
       m.skillActive = false;
       m.skillType = null;
       m.opacity = 1;
-      m.radius = 12;
+      m.radius = 8;
     }
 
     this.onStateChange?.('ready');
